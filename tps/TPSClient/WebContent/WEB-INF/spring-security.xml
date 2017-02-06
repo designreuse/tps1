@@ -1,0 +1,188 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/security
+	http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider>
+            <jdbc-user-service data-source-ref="dataSource"
+                               users-by-username-query=
+                                       "select email_id,password, active from user_detail where email_id=?"
+                               authorities-by-username-query=
+                                       "select u.user_detail_id, r.role_desc, u.email_id from role r JOIN user_detail u on(u.role_id=r.role_id) where u.email_id =?  "></jdbc-user-service>
+        </authentication-provider>
+    </authentication-manager>
+
+
+  <!--   <authentication-manager erase-credentials="true" alias="authenticationManager">
+         <authentication-provider ref="customAuthenticationController">
+         </authentication-provider>
+     </authentication-manager>-->
+
+    <beans:bean id="springSecurityFilterChain" class="org.springframework.security.web.FilterChainProxy">
+        <filter-chain-map path-type="ant">
+
+
+            <filter-chain pattern="/login/**" filters="none"/>
+            <filter-chain pattern="/signup/**" filters="none"/>
+            <filter-chain pattern="/fonts/**" filters="none"/>
+            <filter-chain pattern="/tp-icon/**" filters="none"/>
+            <filter-chain pattern="/captcha/**" filters="none"/>
+            <filter-chain pattern="/registration/**" filters="none"/>
+            <filter-chain pattern="/register/**" filters="none"/>
+            <filter-chain pattern="/font-awesome/**" filters="none"/>
+            <!--<filter-chain pattern="/" filters="none"/>-->
+            <filter-chain pattern="/j_spring_security_check" filters="securityContextPersistenceFilter,authenticationProcessingFilter, basicAuthenticationFilter,
+        exceptionTranslationFilter"/>
+            <filter-chain pattern="/j_spring_security_logout" filters="logoutFilter"/>
+            <filter-chain pattern="/css/**" filters="none"/>
+            <filter-chain pattern="/js/**" filters="none"/>
+            <filter-chain pattern="/**" filters="
+        securityContextPersistenceFilter,logoutFilter,
+        basicAuthenticationFilter,
+        exceptionTranslationFilter,
+        filterSecurityInterceptor"
+            />
+        </filter-chain-map>
+    </beans:bean>
+
+    <!--<beans:bean id="formLoginFilter"
+                class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+        <beans:property name="authenticationSuccessHandler" ref="customSuccessHandler">
+        &lt;!&ndash;<beans:property name="authenticationSuccessHandler">
+            <beans:bean
+                    class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+                <beans:property name="defaultTargetUrl" value="/success"/>
+            </beans:bean>&ndash;&gt;
+        </beans:property>
+        <beans:property name="sessionAuthenticationStrategy">
+            <beans:bean
+                    class="org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy"/>
+        </beans:property>
+    </beans:bean>-->
+
+    <beans:bean id="securityContextPersistenceFilter"
+                class="org.springframework.security.web.context.SecurityContextPersistenceFilter">
+    </beans:bean>
+
+    <beans:bean id="basicAuthenticationFilter"
+                class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter">
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+        <beans:property name="authenticationEntryPoint" ref="authenticationEntryPoint"/>
+        <!--<beans:property name="authenticationDetailsSource" ref="authenticationProcessingFilter"/>-->
+    </beans:bean>
+
+    <beans:bean id="exceptionTranslationFilter"
+                class="org.springframework.security.web.access.ExceptionTranslationFilter">
+        <beans:property name="authenticationEntryPoint" ref="authenticationEntryPoint"/>
+        <beans:property name="accessDeniedHandler" ref="accessDeniedHandler"/>
+    </beans:bean>
+
+    <beans:bean id="authenticationEntryPoint"
+                class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+        <beans:property name="loginFormUrl" value="/login"/>
+
+
+    </beans:bean>
+
+    <beans:bean id="accessDeniedHandler"
+                class="org.springframework.security.web.access.AccessDeniedHandlerImpl">
+        <beans:property name="errorPage" value="/login"/>
+    </beans:bean>
+
+
+    <!--<beans:bean id="authenticationProcessingFilter"
+                class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+    </beans:bean>-->
+
+    <beans:bean id="authenticationProcessingFilter"
+                class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">
+        <beans:property name="authenticationFailureHandler" ref="authenticationFailureHandler"/>
+        <beans:property name="authenticationSuccessHandler" ref="customSuccessHandler"/>
+        <beans:property name="filterProcessesUrl" value="/j_spring_security_check"/>
+        <beans:property name="usernameParameter" value="j_username"/>
+        <beans:property name="passwordParameter" value="j_password"/>
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+    </beans:bean>
+
+    <beans:bean id="authenticationFailureHandler"
+                class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+        <beans:property name="defaultFailureUrl" value="/login"/>
+    </beans:bean>
+
+
+    <beans:bean id="filterSecurityInterceptor"
+                class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+        <beans:property name="authenticationManager" ref="authenticationManager"></beans:property>
+        <beans:property name="accessDecisionManager" ref="affirmativeBased"></beans:property>
+        <beans:property name="securityMetadataSource" ref="customFilter">
+
+        </beans:property>
+
+
+        <beans:property name="validateConfigAttributes" value="true"/>
+    </beans:bean>
+
+
+    <beans:bean id="filterSecurityInterceptor2"
+                class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+        <beans:property name="authenticationManager" ref="authenticationManager"></beans:property>
+        <beans:property name="accessDecisionManager" ref="affirmativeBased"></beans:property>
+        <beans:property name="securityMetadataSource">
+            <filter-security-metadata-source>
+                <intercept-url pattern="/login" access="ADMIN"/>
+            </filter-security-metadata-source>
+        </beans:property>
+
+
+        <beans:property name="validateConfigAttributes" value="true"/>
+    </beans:bean>
+
+
+    <beans:bean id="affirmativeBased" class="org.springframework.security.access.vote.AffirmativeBased">
+        <beans:property name="decisionVoters">
+            <beans:list>
+                <beans:bean class="org.springframework.security.web.access.expression.WebExpressionVoter"/>
+                <beans:bean class="org.springframework.security.access.vote.RoleVoter">
+                    <beans:property name="rolePrefix" value=""/>
+                </beans:bean>
+                <beans:bean class="org.springframework.security.access.vote.AuthenticatedVoter"/>
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+
+    <beans:bean id="customFilter" class="igc.tech.com.security.MyFilterSecurityMetadataSource"></beans:bean>
+
+    <beans:bean id="customSuccessHandler" class="igc.tech.com.security.CustomAuthenticationSuccessHandler"></beans:bean>
+
+    <beans:bean id="logoutFilter" class="org.springframework.security.web.authentication.logout.LogoutFilter">
+        <beans:constructor-arg value="/login"/>
+        <beans:constructor-arg>
+            <beans:list>
+                <beans:bean
+                        class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
+            </beans:list>
+        </beans:constructor-arg>
+    </beans:bean>
+
+    <beans:bean id="logoutFilter1" class="org.springframework.security.web.authentication.logout.LogoutFilter">
+        <beans:constructor-arg value="/login"/>
+        <beans:constructor-arg>
+            <beans:list>
+                <beans:bean
+                        class="igc.tech.com.security.CustomLogout"/>
+            </beans:list>
+        </beans:constructor-arg>
+    </beans:bean>
+
+
+
+
+
+</beans:beans>

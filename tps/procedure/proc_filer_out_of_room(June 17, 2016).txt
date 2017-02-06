@@ -1,0 +1,255 @@
+DROP PROCEDURE IF EXISTS tps1.proc_out_of_room_filter;
+CREATE DEFINER=`tps`@`localhost` PROCEDURE `proc_out_of_room_filter`(in_room_detail_id   INT,
+                                                   in_check_in_date  VARCHAR(100),
+                                                   in_check_out_date VARCHAR(100),
+                                                   in_no_of_rooms    INT,
+                                                   in_no_of_adult    INT,
+                                                   in_no_of_child    INT,
+                                                   in_child_ages     VARCHAR(500),
+                                             --      in_activities     VARCHAR(1000),
+                                                   in_amenities      VARCHAR(1000),
+                                                   in_from_price     FLOAT,
+                                                   in_to_price       FLOAT
+)
+BEGIN
+
+  DECLARE lv_room_detail_id INT;
+
+  DECLARE lv_hotel_detail_id INT;
+    DECLARE lv_no_of_guest INT;
+    DECLARE lv_rate FLOAT;
+    DECLARE lv_extra_adult INT;
+    DECLARE lv_extra_child INT;
+    DECLARE lv_child_age_max INT;
+    DECLARE lv_child_rate INT;
+    DECLARE lv_adult_rate INT;
+
+    DECLARE lv_actual_adult INTEGER;
+    DECLARE lv_actual_child INTEGER;
+
+
+    DECLARE lv_total_guest INT;
+
+
+    -- *****************testing************
+
+
+    SELECT hotel_detail_id INTO lv_hotel_detail_id from room_detail WHERE room_detail_id=in_room_detail_id;
+
+    CALL proc_convert_array(in_child_ages);
+
+    DROP TEMPORARY TABLE if EXISTS temp_listed;
+
+    SET @test_query=concat('
+    CREATE  TEMPORARY TABLE if NOT EXISTS temp_listed
+    SELECT (@row_number:=@row_number + 1) AS row_count,
+         a.room_detail_id,
+         a.hotel_detail_id,
+         a.rooms_provided,
+         (a.rooms_provided - ifnull(f.count, 0)) rem_room,
+         a.no_of_guest,
+         a.rate,
+      --   a.min_no_of_guest,
+      --   a.discount,
+      --   a.discount_type,
+         a.extra_adult,
+         a.extra_child,
+         h.child_age_max,
+         h.child_rate,
+         h.adult_rate
+       FROM room_detail a JOIN room_type b ON (a.room_type_id = b.room_type_id)
+         JOIN hotel_detail c ON (a.hotel_detail_id = c.hotel_detail_id)
+         JOIN region d ON (c.region_id = d.region_id)
+         JOIN country e ON (d.country_id = e.country_id)
+         JOIN extra_bed h ON (a.hotel_detail_id = h.hotel_detail_id)
+         LEFT JOIN (SELECT
+                      count(*) count,
+                      room_detail_id
+                    FROM hotel_room_log
+                    WHERE (''',in_check_in_date,''' BETWEEN check_in_date AND check_out_date
+                           OR ''',in_check_out_date,''' BETWEEN check_in_date AND check_out_date
+                           OR check_in_date BETWEEN ''',in_check_in_date,''' AND ''',in_check_out_date,'''
+                           OR check_out_date BETWEEN ''',in_check_in_date,''' AND ''',in_check_out_date,''') AND cancel_status <> ''Y''
+                    GROUP BY room_detail_id) f ON (f.room_detail_id = a.room_detail_id)');
+
+
+    IF (in_amenities IS NOT NULL ) THEN
+
+      set @test_query=concat(@test_query,' JOIN (SELECT room_detail_id, group_concat(amenity_id ORDER by amenity_id)
+                                      from room_amenity WHERE amenity_id in (',in_amenities,') AND  deleted_flag<>''Y'' AND  active=''Y''
+                                      GROUP BY  room_detail_id
+                                      HAVING group_concat(amenity_id ORDER by amenity_id)=(SELECT group_concat(amenity_id ORDER by amenity_id) from amenity
+                                      WHERE amenity_id in (',in_amenities,') and
+                                            deleted_flag<>''Y'' and parent_amenity_id is not NULL)) j ON a.room_detail_id=j.room_detail_id');
+
+    END IF;
+
+
+
+    set @test_query =concat(@test_query, ',(SELECT @row_number:=0) AS t');
+
+    set @test_query=concat(@test_query,'  WHERE a.deleted_flag <> ''Y'' AND
+               a.hotel_detail_id=',lv_hotel_detail_id,'  AND
+               (a.rooms_provided - ifnull(f.count, 0)) >= ',in_no_of_rooms,' AND c.active = ''Y'' AND
+                  ''',in_check_in_date,''' > now() AND ''',in_check_out_date,''' > now() and a.room_detail_id not in (',in_room_detail_id,')');
+
+
+    PREPARE stmt FROM @test_query;
+    EXECUTE stmt;
+
+    ALTER TABLE temp_listed
+    ADD actual_adult   INT,
+    ADD  actual_child   INT,
+    ADD  total_guest    INT,
+    ADD eff_child      INT,
+    ADD eff_adult      INT,
+    ADD offer_id      INT,
+    ADD actual_rate     FLOAT,
+    ADD final_rate     FLOAT;
+
+    set @count=0;
+
+    SELECT count(*) into @count from temp_listed;
+
+    set @counter=1;
+
+
+    WHILE (@counter<=@count) DO
+
+      SELECT  room_detail_id,no_of_guest,rate,extra_adult,extra_child,child_age_max,child_rate,adult_rate
+      into lv_room_detail_id, lv_no_of_guest,lv_rate,lv_extra_adult,lv_extra_child,lv_child_age_max,lv_child_rate,lv_adult_rate
+      FROM temp_listed WHERE row_count=@counter;
+      -- ***************************
+
+      SELECT count(*)  INTO lv_actual_child  FROM array_table   WHERE value <= lv_child_age_max;
+
+      SELECT count(*) + in_no_of_adult  INTO lv_actual_adult  FROM array_table WHERE value > lv_child_age_max;
+
+      SET lv_total_guest = lv_actual_adult + lv_actual_child;
+
+
+      IF (lv_total_guest <= (lv_no_of_guest * in_no_of_rooms))
+      THEN
+        --  SELECT 'test1';
+        SET @actual_rate = lv_rate * in_no_of_rooms;
+
+        SET SQL_SAFE_UPDATES=0;
+        UPDATE temp_listed set actual_adult=lv_actual_adult,
+          actual_child=lv_actual_child,
+          total_guest=lv_total_guest,
+          eff_child=0,
+          eff_adult=0,
+          actual_rate=@actual_rate
+        WHERE row_count=@counter;
+        SET SQL_SAFE_UPDATES=1;
+        set @selected=TRUE ;
+        
+      ELSEIF (lv_actual_adult < (lv_no_of_guest * in_no_of_rooms))
+        THEN
+          --  SELECT 'test2';
+          SET @rem_guest = lv_no_of_guest * in_no_of_rooms - lv_actual_adult;
+
+          SET @eff_child = lv_actual_child - @rem_guest;
+
+          IF (@eff_child <= lv_extra_child * in_no_of_rooms)
+          THEN
+            SET @actual_rate = lv_rate * in_no_of_rooms + lv_child_rate * @eff_child;
+
+            SET SQL_SAFE_UPDATES=0;
+            UPDATE temp_listed set actual_adult=lv_actual_adult,
+              actual_child=lv_actual_child,
+              total_guest=lv_total_guest,
+              eff_child=@eff_child,
+              eff_adult=0,
+              actual_rate=@actual_rate
+            WHERE row_count=@counter;
+            SET SQL_SAFE_UPDATES=1;
+            set @selected=TRUE ;
+            
+          END IF;
+
+      ELSEIF (lv_actual_adult = lv_no_of_guest * in_no_of_rooms)
+        THEN
+          --  SELECT 'test3',lv_actual_adult,lv_actual_child,lv_extra_child,lv_rate,lv_child_rate,lv_room_detail_id;
+          IF (lv_actual_child <= lv_extra_child * in_no_of_rooms)
+          THEN
+            SET @actual_rate = (lv_rate * in_no_of_rooms) + (lv_child_rate * lv_actual_child);
+
+            SET SQL_SAFE_UPDATES=0;
+            UPDATE temp_listed set actual_adult=lv_actual_adult,
+              actual_child=lv_actual_child,
+              total_guest=lv_total_guest,
+              eff_child=lv_actual_child,
+              eff_adult=0,
+              actual_rate=@actual_rate
+            WHERE row_count=@counter;
+            SET SQL_SAFE_UPDATES=1;
+            set @selected=TRUE ;
+            
+          END IF;
+
+      ELSEIF (lv_actual_adult > lv_no_of_guest * in_no_of_rooms)
+        THEN
+          --   SELECT 'test3';
+          SET @eff_adult = lv_actual_adult - lv_no_of_guest * in_no_of_rooms;
+
+          IF (@eff_adult <= lv_extra_adult * in_no_of_rooms AND lv_actual_child <= lv_extra_child * in_no_of_rooms)
+          THEN
+            SET @actual_rate = lv_rate * in_no_of_rooms + lv_child_rate * lv_actual_child + lv_adult_rate * @eff_adult;
+
+            SET SQL_SAFE_UPDATES=0;
+            UPDATE temp_listed set actual_adult=lv_actual_adult,
+              actual_child=lv_actual_child,
+              total_guest=lv_total_guest,
+              eff_child=lv_actual_child,
+              eff_adult=@eff_adult,
+              actual_rate=@actual_rate
+            WHERE row_count=@counter;
+            SET SQL_SAFE_UPDATES=1;
+            set @selected=TRUE ;
+            
+          END IF;
+
+      END IF;
+
+      set @offer_id=NULL ;
+      set @offer_type=NULL ;
+      set  @offer_amount=NULL ;
+
+      if (@selected=TRUE ) THEN
+
+        -- for offer  
+        SELECT offer_id,offer_type,offer_amount INTO @offer_id,@offer_type,@offer_amount  from offer
+        WHERE room_detail_id=lv_room_detail_id and
+              in_check_in_date BETWEEN effective_from and effective_to AND
+              in_check_out_date BETWEEN effective_from and effective_to AND
+              deleted_flag<>'Y';
+
+
+        IF (@offer_type='PERCENTAGE') THEN
+          set @final_amount= @actual_rate-(@offer_amount/100)*@actual_rate;
+
+        ELSEIF (@offer_type='FLAT') THEN
+          set @final_amount= @actual_rate-@offer_amount;
+
+        ELSE
+          set @final_amount=@actual_rate;
+
+        END IF;
+
+        SET SQL_SAFE_UPDATES=0;
+        UPDATE temp_listed set final_rate=round(@final_amount),
+          offer_id=@offer_id
+        WHERE row_count=@counter;
+        SET SQL_SAFE_UPDATES=1;
+
+      -- for offer  
+      END IF;
+      
+      -- *******************
+      set @counter=@counter+1;
+    END WHILE;
+
+    SELECT  * from temp_listed WHERE final_rate is not null and final_rate BETWEEN ifnull(in_from_price,0) and ifnull(in_to_price,'9999999999999999') ;
+
+  END;

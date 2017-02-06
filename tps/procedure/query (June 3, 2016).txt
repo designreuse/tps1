@@ -1,0 +1,20 @@
+CALL proc_hotel_filter(NULL ,'2016-10-2','2016-10-8',1,1,1,'1',NULL ,NULL ,NULL ,NULL );
+
+CALL proc_room_filter(1 ,'2016-10-2','2016-10-8',3,2,1,'1' );
+
+CALL proc_out_of_room_filter(1 ,'2016-10-2','2016-10-8',1,1,1,'1',NULL  ,NULL ,NULL );
+
+
+CALL proc_hotel_filter1(NULL ,'2016-12-1','2016-12-2',1,1,1,'1',NULL ,NULL ,NULL ,NULL,NULL ,NULL ,NULL ,NULL ,NULL );
+
+
+  in_activities
+  in_amenities
+  in_from_price
+  in_to_price
+
+in_sorting_type
+in_star_range
+in_page_no
+in_off_set
+in_search_key

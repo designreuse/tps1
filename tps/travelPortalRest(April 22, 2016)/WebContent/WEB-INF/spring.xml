@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                           http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
+                           http://www.springframework.org/schema/aop
+                           http://www.springframework.org/schema/aop/spring-aop-2.0.xsd
+                           http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:component-scan base-package="igc.tech.com.resource"
+                            annotation-config="true"/>
+    <context:annotation-config/>
+
+
+    <!-- <bean id="dataSource" destroy-method="close" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" /> <property
+        name="url" value="jdbc:mysql://192.168.8.4:3306/pgview" /> <property name="username"
+        value="pgview" /> <property name="password" value="Nh2BzGyq6JcprR3Y" /> <property
+        name="initialSize" value="3" /> </bean> -->
+
+
+    <bean id="dataSource" destroy-method="close"
+          class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://192.168.8.4:3306/tps1"/>
+        <property name="username" value="tps"/>
+        <property name="password" value="tps"/>
+        <property name="initialSize" value="3"/>
+    </bean>
+
+
+    <!-- MASTER BEAN -->
+
+
+    <bean class="igc.tech.com.dao.PackageInfoDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.CountryDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.RegionDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.HotelDetailDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelFacilityDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.PackageItineraryDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.PackageAvailableDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.AvailableDateRateImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.ActivityDetailDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.PackageLocationDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.DayDetailDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.BedTypeDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.RoomFacilityDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.RoomTypeDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.RoomFacilityAccessDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.BedTypeAccessDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.PackageSearchDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelSearchDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.AlbumDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.ImageDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.ClientDetailDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.CustomerDetailDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.PackageBookingDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelBookingDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.MailServerSettingDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.PackageBookingStatusDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelBookingStatusDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelImageDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.RoomImageDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelRulesDaompl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.RoomImportanceDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+
+
+    <!--END TRANSACTION BEAN -->
+
+    <tx:annotation-driven transaction-manager="txManager"/>
+    <bean id="txManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+</beans>

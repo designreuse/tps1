@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/TPSClient.iml" filepath="$PROJECT_DIR$/TPSClient.iml" />
+      <module fileurl="file://D:/software/apache-tomcat-7.0.59-windows-x64/apache-tomcat-7.0.59/webapps/TPSResources/TPSResources.iml" filepath="D:/software/apache-tomcat-7.0.59-windows-x64/apache-tomcat-7.0.59/webapps/TPSResources/TPSResources.iml" />
+    </modules>
+  </component>
+</project>

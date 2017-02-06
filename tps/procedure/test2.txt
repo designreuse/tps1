@@ -1,0 +1,402 @@
+DROP PROCEDURE IF EXISTS tps1.test2;
+CREATE DEFINER=`tps`@`localhost` PROCEDURE `test2`(in_search_value   VARCHAR(500),
+                                                  in_check_in_date  VARCHAR(100),
+                                                  in_check_out_date VARCHAR(100),
+                                                  in_no_of_rooms    INT,
+                                                  in_no_of_adult    INT,
+                                                  in_no_of_child    INT,
+                                                  in_child_ages     VARCHAR(500),
+                                                  in_features       VARCHAR(1000),
+                                                  in_activities     VARCHAR(1000),
+                                                  in_amenities      VARCHAR(1000),
+                                                  in_from_price     FLOAT,
+                                                  in_to_price       FLOAT
+)
+BEGIN
+
+    DECLARE lv_room_detail_id INT;
+    DECLARE lv_hotel_detail_id INT;
+    DECLARE lv_rooms_provided INT;
+    DECLARE lv_rem_room INT;
+    DECLARE lv_no_of_guest INT;
+    DECLARE lv_rate FLOAT;
+    DECLARE lv_min_no_of_guest INT;
+    DECLARE lv_discount FLOAT;
+    DECLARE lv_discount_type VARCHAR(2);
+    DECLARE lv_extra_adult INT;
+    DECLARE lv_extra_child INT;
+    DECLARE lv_child_age_max INT;
+    DECLARE lv_child_rate INT;
+    DECLARE lv_adult_rate INT;
+
+    DECLARE lv_actual_adult INTEGER;
+    DECLARE lv_actual_child INTEGER;
+
+
+    DECLARE lv_total_guest INT;
+
+    DECLARE v_finished INTEGER DEFAULT 0;
+
+    DECLARE c1 CURSOR FOR
+      (SELECT
+         a.room_detail_id,
+         a.hotel_detail_id,
+         a.rooms_provided,
+         (a.rooms_provided - ifnull(f.count, 0)) rem_room,
+         a.no_of_guest,
+         a.rate,
+         a.min_no_of_guest,
+         a.discount,
+         a.discount_type,
+         a.extra_adult,
+         a.extra_child,
+         h.child_age_max,
+         h.child_rate,
+         h.adult_rate
+       FROM room_detail a JOIN room_type b ON (a.room_type_id = b.room_type_id)
+         JOIN hotel_detail c ON (a.hotel_detail_id = c.hotel_detail_id)
+         JOIN region d ON (c.region_id = d.region_id)
+         JOIN country e ON (d.country_id = e.country_id)
+         JOIN extra_bed h ON (a.hotel_detail_id = h.hotel_detail_id)
+         LEFT JOIN (SELECT
+                      count(*) count,
+                      room_detail_id
+                    FROM hotel_room_log
+                    WHERE (in_check_in_date BETWEEN check_in_date AND check_out_date
+                           OR in_check_out_date BETWEEN check_in_date AND check_out_date
+                           OR check_in_date BETWEEN in_check_in_date AND in_check_out_date
+                           OR check_out_date BETWEEN in_check_in_date AND in_check_out_date) AND cancel_status <> 'Y'
+                    GROUP BY room_detail_id) f ON (f.room_detail_id = a.room_detail_id)
+       WHERE a.deleted_flag <> 'Y' AND
+             (c.hotel_name LIKE CONCAT('%', ifnull(in_search_value, ''), '%') OR
+              d.region_name LIKE CONCAT('%', ifnull(in_search_value, ''), '%')
+              OR e.country_name LIKE CONCAT('%', ifnull(in_search_value, ''), '%')) AND
+             (a.rooms_provided - ifnull(f.count, 0)) >= in_no_of_rooms AND c.active = 'Y' AND
+             in_check_in_date > now() AND in_check_out_date > now());
+
+    -- declare NOT FOUND handler
+    DECLARE CONTINUE HANDLER
+    FOR NOT FOUND SET v_finished = 1;
+
+    DROP TEMPORARY TABLE IF EXISTS temp_ages;
+
+    CREATE TEMPORARY TABLE temp_ages (
+      age INT
+    );
+
+    SET @count = 1;
+
+    WHILE (@count <= in_no_of_child)
+    DO
+
+      --   SET @query = CONCAT('select ELT(', @count, ',', @myArrayOfValue, ')  into @age ');
+      SET @query = concat('insert into temp_ages VALUES (ELT(', @count, ',', in_child_ages, '))');
+
+
+      PREPARE stmt FROM @query;
+      EXECUTE stmt;
+
+      --  SELECT @age;
+
+      SET @count = @count + 1;
+
+
+    END WHILE;
+
+    DROP TEMPORARY TABLE IF EXISTS temp_room_det;
+
+    CREATE TEMPORARY TABLE IF NOT EXISTS temp_room_det (
+      room_detail_id INT,
+      no_of_guest    INT,
+      actual_adult   INT,
+      actual_child   INT,
+      total_guest    INT,
+      eff_child      INT,
+      eff_adult      INT,
+      final_rate     FLOAT
+    );
+
+
+    OPEN c1;
+
+    get_loop: LOOP
+
+      FETCH c1
+      INTO lv_room_detail_id,lv_hotel_detail_id, lv_rooms_provided, lv_rem_room, lv_no_of_guest, lv_rate, lv_min_no_of_guest, lv_discount,
+        lv_discount_type, lv_extra_adult, lv_extra_child, lv_child_age_max, lv_child_rate, lv_adult_rate;
+
+      IF v_finished = 1
+      THEN
+        LEAVE get_loop;
+      END IF;
+
+      -- ***************advance search starts here**************
+
+      /*************initializing flag**********/
+      set @activity_flag=0;
+      set @amenity_flag=0;
+      /*************end initializing flag**********/
+
+      -- *******************for activity*******************
+
+      if (in_activities IS NOT  NULL ) THEN
+
+        DROP TEMPORARY TABLE IF EXISTS temp_activity_filter;
+
+        set @query=concat('CREATE  TEMPORARY TABLE temp_activity_filter
+                           SELECT hotel_detail_id, group_concat(activity_id ORDER by activity_id )
+                            from hotel_activity WHERE activity_id in (',in_activities,' ) and  deleted_flag<>''Y'' AND  active=''Y''
+                            GROUP BY  hotel_detail_id
+                            HAVING group_concat(activity_id ORDER by activity_id )=(SELECT group_concat(activity_id ORDER by activity_id) from activity
+                            WHERE activity_id in (',in_activities,' ) and
+                                  deleted_flag<>''Y'' and activity.parent_activity_id is not NULL) and hotel_detail_id=',lv_hotel_detail_id);
+
+        -- SELECT @query;
+
+        PREPARE stmt from @query;
+        EXECUTE  stmt;
+
+        if exists(SELECT * from temp_activity_filter) THEN
+          set @activity_flag=1;
+        END IF;
+      ELSE
+        set @activity_flag=1;
+
+      END IF;
+
+      -- ******************* end for activity*******************
+
+      -- *******************for amenities*******************
+
+      if (in_amenities IS NOT  NULL ) THEN
+
+        DROP TEMPORARY TABLE IF EXISTS temp_amenities_filter;
+
+        set @query=concat('CREATE  TEMPORARY TABLE temp_amenities_filter
+                            SELECT room_detail_id, group_concat(amenity_id ORDER by amenity_id)
+                            from room_amenity WHERE amenity_id in (',in_amenities,') and  deleted_flag<>''Y'' AND  active=''Y''
+                            GROUP BY  room_detail_id
+                            HAVING group_concat(amenity_id ORDER by amenity_id)=(SELECT group_concat(amenity_id ORDER by amenity_id) from amenity
+                            WHERE amenity_id in (',in_amenities,') and
+                                  deleted_flag<>''Y'' and parent_amenity_id is not NULL) and room_detail_id=',lv_room_detail_id);
+
+        -- SELECT @query;
+
+        PREPARE stmt from @query;
+        EXECUTE  stmt;
+
+        if exists(SELECT * from temp_amenities_filter) THEN
+          set @amenity_flag=1;
+        END IF;
+      ELSE
+        set @amenity_flag=1;
+
+      END IF;
+
+      -- ******************* end for amenities*******************
+
+
+      -- **************advance search finish here*******************
+
+
+
+      -- *********** main search part starts from here ***********************
+
+      IF (@activity_flag=1 AND  @amenity_flag=1) THEN
+
+        SELECT count(*)
+        INTO lv_actual_child
+        FROM temp_ages
+        WHERE age <= lv_child_age_max;
+
+        SELECT count(*) + in_no_of_adult
+        INTO lv_actual_adult
+        FROM temp_ages
+        WHERE age > lv_child_age_max;
+
+        SET lv_total_guest = lv_actual_adult + lv_actual_child;
+
+
+        IF (lv_total_guest <= (lv_no_of_guest * in_no_of_rooms))
+        THEN
+          --  SELECT 'test1';
+          SET @final_rate = lv_rate * in_no_of_rooms;
+          INSERT INTO temp_room_det
+          VALUES (lv_room_detail_id, lv_no_of_guest, lv_actual_adult, lv_actual_child, lv_total_guest, 0, 0, @final_rate);
+
+        ELSEIF (lv_actual_adult < (lv_no_of_guest * in_no_of_rooms))
+          THEN
+            --  SELECT 'test2';
+            SET @rem_guest = lv_no_of_guest * in_no_of_rooms - lv_actual_adult;
+
+            SET @eff_child = lv_actual_child - @rem_guest;
+
+            IF (@eff_child <= lv_extra_child * in_no_of_rooms)
+            THEN
+              SET @final_rate = lv_rate * in_no_of_rooms + lv_child_rate * @eff_child;
+              INSERT INTO temp_room_det VALUES
+                (lv_room_detail_id, lv_no_of_guest, lv_actual_adult, lv_actual_child, lv_total_guest, @eff_child, 0,
+                 @final_rate);
+            END IF;
+
+        ELSEIF (lv_actual_adult = lv_no_of_guest * in_no_of_rooms)
+          THEN
+            --  SELECT 'test3',lv_actual_adult,lv_actual_child,lv_extra_child,lv_rate,lv_child_rate,lv_room_detail_id;
+            IF (lv_actual_child <= lv_extra_child * in_no_of_rooms)
+            THEN
+              SET @final_rate = (lv_rate * in_no_of_rooms) + (lv_child_rate * lv_actual_child);
+              INSERT INTO temp_room_det VALUES
+                (lv_room_detail_id, lv_no_of_guest, lv_actual_adult, lv_actual_child, lv_total_guest, lv_actual_child, 0,
+                 @final_rate);
+            END IF;
+
+        ELSEIF (lv_actual_adult > lv_no_of_guest * in_no_of_rooms)
+          THEN
+            --   SELECT 'test3';
+            SET @eff_adult = lv_actual_adult - lv_no_of_guest * in_no_of_rooms;
+
+            IF (@eff_adult <= lv_extra_adult * in_no_of_rooms AND lv_actual_child <= lv_extra_child * in_no_of_rooms)
+            THEN
+              SET @final_rate = lv_rate * in_no_of_rooms + lv_child_rate * lv_actual_child + lv_adult_rate * @eff_adult;
+              INSERT INTO temp_room_det VALUES
+                (lv_room_detail_id, lv_no_of_guest, lv_actual_adult, lv_actual_child, lv_total_guest, lv_actual_child,
+                 @eff_adult, @final_rate);
+            END IF;
+
+        END IF;
+
+
+      END  if;
+
+      -- **** reset flag********
+      set @activity_flag=0;
+      set @amenity_flag=0;
+
+      -- **** reset flag********
+      -- ********* main search part ends here*************************
+    END LOOP get_loop;
+
+    CLOSE c1;
+    /*
+        SELECT
+          a.room_detail_id,
+          a.hotel_detail_id,
+          c.hotel_name,
+          a.rooms_provided,
+          (a.rooms_provided - ifnull(f.count, 0)) rem_room,
+          in_no_of_rooms                          no_of_rooms,
+          a.no_of_guest * in_no_of_rooms          no_of_guest,
+          a.rate * in_no_of_rooms                 rate,
+          a.min_no_of_guest,
+          a.discount,
+          a.discount_type,
+          a.extra_adult * in_no_of_rooms          extra_adult,
+          a.extra_child * in_no_of_rooms          extra_child,
+          h.child_age_max,
+          h.child_rate,
+          h.adult_rate,
+          k.actual_adult,
+          k.actual_child,
+          k.total_guest,
+          k.eff_child,
+          k.eff_adult,
+          k.final_rate
+        FROM room_detail a JOIN room_type b ON (a.room_type_id = b.room_type_id)
+          JOIN hotel_detail c ON (a.hotel_detail_id = c.hotel_detail_id)
+          JOIN region d ON (c.region_id = d.region_id)
+          JOIN country e ON (d.country_id = e.country_id)
+          JOIN extra_bed h ON (a.hotel_detail_id = h.hotel_detail_id)
+          JOIN temp_room_det k ON (a.room_detail_id = k.room_detail_id)
+          LEFT JOIN (SELECT
+                       count(*) count,
+                       room_detail_id
+                     FROM hotel_room_log
+                     WHERE (in_check_in_date BETWEEN check_in_date AND check_out_date
+                            OR in_check_out_date BETWEEN check_in_date AND check_out_date
+                            OR check_in_date BETWEEN in_check_in_date AND in_check_out_date
+                            OR check_out_date BETWEEN in_check_in_date AND in_check_out_date) AND cancel_status <> 'Y'
+                     GROUP BY room_detail_id) f ON (f.room_detail_id = a.room_detail_id)
+        WHERE
+          (a.rooms_provided - ifnull(f.count, 0)) >= in_no_of_rooms AND
+          k.final_rate BETWEEN ifnull(in_from_price,0) AND ifnull(in_to_price,99999999999999999999);
+
+    */
+
+
+    -- *****************testing************
+
+  
+  DROP TEMPORARY TABLE if EXISTS tilak;
+  
+    SET @test_query=concat('  
+    CREATE  TEMPORARY TABLE if NOT EXISTS tilak
+    SELECT (@row_number:=@row_number + 1) AS num,
+         a.room_detail_id,
+         a.hotel_detail_id,
+         a.rooms_provided,
+         (a.rooms_provided - ifnull(f.count, 0)) rem_room,
+         a.no_of_guest,
+         a.rate,
+         a.min_no_of_guest,
+         a.discount,
+         a.discount_type,
+         a.extra_adult,
+         a.extra_child,
+         h.child_age_max,
+         h.child_rate,
+         h.adult_rate
+       FROM room_detail a JOIN room_type b ON (a.room_type_id = b.room_type_id)
+         JOIN hotel_detail c ON (a.hotel_detail_id = c.hotel_detail_id)
+         JOIN region d ON (c.region_id = d.region_id)
+         JOIN country e ON (d.country_id = e.country_id)
+         JOIN extra_bed h ON (a.hotel_detail_id = h.hotel_detail_id)
+         LEFT JOIN (SELECT
+                      count(*) count,
+                      room_detail_id
+                    FROM hotel_room_log
+                    WHERE (',in_check_in_date,' BETWEEN check_in_date AND check_out_date
+                           OR ',in_check_out_date,' BETWEEN check_in_date AND check_out_date
+                           OR check_in_date BETWEEN ',in_check_in_date,' AND ',in_check_out_date,'
+                           OR check_out_date BETWEEN ',in_check_in_date,' AND ',in_check_out_date,') AND cancel_status <> ''Y''
+                    GROUP BY room_detail_id) f ON (f.room_detail_id = a.room_detail_id)');
+
+
+    IF (in_activities IS NOT NULL ) THEN
+      set @test_query=concat(@test_query,' JOIN (SELECT hotel_detail_id, group_concat(activity_id ORDER by activity_id )   from hotel_activity WHERE
+                                    deleted_flag<>''Y'' AND  active=''Y'' AND activity_id IN (',in_activities,')  GROUP BY  hotel_detail_id
+                                  HAVING group_concat(activity_id ORDER by activity_id )=(SELECT group_concat(activity_id)
+                                    from activity WHERE activity_id IN (',in_activities,') AND deleted_flag<>''Y'' and parent_activity_id IS NOT NULL)) i ON
+                                    i.hotel_detail_id=a.hotel_detail_id');
+    END IF;
+
+
+    IF (in_amenities IS NOT NULL ) THEN
+
+      set @test_query=concat(@test_query,' JOIN (SELECT room_detail_id, group_concat(amenity_id ORDER by amenity_id)
+                                      from room_amenity WHERE amenity_id in (',in_amenities,') AND  deleted_flag<>''Y'' AND  active=''Y''
+                                      GROUP BY  room_detail_id
+                                      HAVING group_concat(amenity_id ORDER by amenity_id)=(SELECT group_concat(amenity_id ORDER by amenity_id) from amenity
+                                      WHERE amenity_id in (',in_amenities,') and
+                                            deleted_flag<>''Y'' and parent_amenity_id is not NULL)) j ON a.room_detail_id=j.room_detail_id');
+
+    END IF;
+
+
+
+  set @test_query =concat(@test_query, ',(SELECT @row_number:=0) AS t');
+  
+  SELECT @test_query;
+  
+PREPARE stmt FROM @test_query;
+  EXECUTE stmt;
+
+  ALTER TABLE tilak
+  ADD actual_adult   INT,
+  ADD  actual_child   INT,
+  ADD  total_guest    INT,
+  ADD eff_child      INT,
+  ADD eff_adult      INT,
+  ADD final_rate     FLOAT;
+
+
+  END;

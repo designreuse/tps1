@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                           http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
+                           http://www.springframework.org/schema/aop
+                           http://www.springframework.org/schema/aop/spring-aop-2.0.xsd
+                           http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+    <context:component-scan base-package="igc.tech.com.resource"
+                            annotation-config="true"/>
+    <context:annotation-config/>
+
+
+
+    <!-- <bean id="dataSource" destroy-method="close" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" /> <property
+        name="url" value="jdbc:mysql://192.168.8.4:3306/pgview" /> <property name="username"
+        value="pgview" /> <property name="password" value="Nh2BzGyq6JcprR3Y" /> <property
+        name="initialSize" value="3" /> </bean> -->
+
+
+    <!--<bean id="dataSource" destroy-method="close"
+          class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+       <property name="url" value="jdbc:mysql://192.168.8.4:3306/tps1?connectTimeout=60000&amp;socketTimeout=60000"/>
+        <property name="username" value="tps"/>
+        <property name="password" value="tps"/>
+        <property name="initialSize" value="3"/>
+    </bean>
+-->
+
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+          destroy-method="close">
+        <property name="driverClass" value="com.mysql.jdbc.Driver" />
+       <!-- <property name="jdbcUrl" value="jdbc:mysql://192.168.8.4:3306/tps1" />-->
+        <property name="jdbcUrl" value="jdbc:mysql://192.168.8.21:3306/tps1" />
+        <property name="user" value="tps" />
+        <property name="password" value="tps" />
+        <property name="maxPoolSize" value="25" />
+        <property name="minPoolSize" value="10" />
+        <property name="maxStatements" value="100" />
+        <property name="testConnectionOnCheckout" value="true" />
+    </bean>
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <constructor-arg ref="dataSource" />
+    </bean>
+
+
+    <!--
+        <bean id="c3p0DataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+              destroy-method="close">
+            <property name="driverClass" value="com.mysql.jdbc.Driver" />
+            <property name="jdbcUrl" value="#{systemProperties.dbhost}" />
+            <property name="user" value="#{systemProperties.dbuser}" />
+            <property name="password" value="#{systemProperties.dbpass}" />
+            <property name="maxPoolSize" value="25" />
+            <property name="minPoolSize" value="10" />
+            <property name="maxStatements" value="100" />
+            <property name="testConnectionOnCheckout" value="true" />
+        </bean>
+        <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+            <constructor-arg ref="c3p0DataSource" />
+        </bean>
+    -->
+
+
+
+
+
+    <!-- MASTER BEAN -->
+
+
+    <bean class="igc.tech.com.dao.CustomerDetailDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.HotelDetailDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.RoomDetailDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.ExtraBedDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelSearchDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelFilterDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.RoomFilterDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.OutOfRoomFilterDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelFeatureDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.HotelActivityDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.RoomAmenityDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelImageDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.RoomImageDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.OfferDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.NearPlacesDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.AddressDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.ActivityDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.AmenityDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.HotelBookingDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.PayGateAccessDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.NpayConfigDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.NpayTxnDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.EsewaConfigDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.EsewaTxnDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.RoomImportanceDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelRulesDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.BedTypeDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.FilterMainHotelAreaDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.FilterMainHotelWiseDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.FilterAdvanceDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.EncodeDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.MailServerSettingDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.EmailTpsDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <bean class="igc.tech.com.dao.ActivityHighlightDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.AmenityHighlightDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelRatingDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelReviewDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelReviewCategoryDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelReviewImageDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelReviewReplyImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelReviewTagAccessDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelReviewSortingDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.HotelReviewTagDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean class="igc.tech.com.dao.CurrencyDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <!--END TRANSACTION BEAN -->
+
+    <tx:annotation-driven transaction-manager="txManager"/>
+    <bean id="txManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+</beans>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal">
+    <data-source name="MySQL - tps1@192.168.8.4" uuid="68461927-37a7-49b5-a27b-7d1eee24fba1">
+      <secret-storage>master_key</secret-storage>
+      <user-name>tps</user-name>
+      <schema-pattern>tps1.*</schema-pattern>
+      <default-schemas>tps1.*</default-schemas>
+    </data-source>
+    <data-source name="MySQL - tps1@192.168.8.21" uuid="ee1ce078-ed5e-4f1a-bd68-6d15bc635bd6">
+      <secret-storage>master_key</secret-storage>
+      <user-name>tps</user-name>
+      <schema-pattern>tps1.*</schema-pattern>
+      <default-schemas>tps1.*</default-schemas>
+    </data-source>
+    <data-source name="MySQL - incentive_holidays@192.168.8.2" uuid="c5c4f5f3-a485-4d57-92ab-6e26da366241">
+      <secret-storage>master_key</secret-storage>
+      <user-name>root</user-name>
+      <schema-pattern>incentive_holidays.*</schema-pattern>
+      <default-schemas>incentive_holidays.*</default-schemas>
+    </data-source>
+  </component>
+</project>

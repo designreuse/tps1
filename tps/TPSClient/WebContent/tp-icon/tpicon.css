@@ -1,0 +1,126 @@
+@font-face {
+  font-family: 'tpicon';
+  src:  url('fonts/tpicon.eot?3ch6qm');
+  src:  url('fonts/tpicon.eot?3ch6qm#iefix') format('embedded-opentype'),
+  url('fonts/tpicon.ttf?3ch6qm') format('truetype'),
+  url('fonts/tpicon.woff?3ch6qm') format('woff'),
+  url('fonts/tpicon.svg?3ch6qm#tpicon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="tps-"], [class*=" tps-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'tpicon' !important;
+
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.tps-ac:before {
+  content: "\e900";
+}
+.tps-airport:before {
+  content: "\e901";
+}
+.tps-amenity:before {
+  content: "\e902";
+}
+.tps-bar:before {
+  content: "\e903";
+}
+.tps-bath-tub:before {
+  content: "\e904";
+}
+.tps-bbq:before {
+  content: "\e905";
+}
+.tps-bus:before {
+  content: "\e906";
+}
+.tps-carpet:before {
+  content: "\e907";
+}
+.tps-cd-player:before {
+  content: "\e908";
+}
+.tps-cloth-rack:before {
+  content: "\e909";
+}
+.tps-computer:before {
+  content: "\e90a";
+}
+.tps-cycling:before {
+  content: "\e90b";
+}
+.tps-dart:before {
+  content: "\e90c";
+}
+.tps-dive:before {
+  content: "\e90d";
+}
+.tps-food-drink:before {
+  content: "\e90e";
+}
+.tps-free-cancellation:before {
+  content: "\e90f";
+}
+.tps-hair-drier:before {
+  content: "\e910";
+}
+.tps-hiking:before {
+  content: "\e911";
+}
+.tps-laptop:before {
+  content: "\e912";
+}
+.tps-media-technology:before {
+  content: "\e913";
+}
+.tps-outdoor:before {
+  content: "\e914";
+}
+.tps-parking:before {
+  content: "\e915";
+}
+.tps-pay:before {
+  content: "\e916";
+}
+.tps-restaurant:before {
+  content: "\e917";
+}
+.tps-slipper:before {
+  content: "\e918";
+}
+.tps-sofa:before {
+  content: "\e919";
+}
+.tps-spa:before {
+  content: "\e91a";
+}
+.tps-supper-market:before {
+  content: "\e91b";
+}
+.tps-swim:before {
+  content: "\e91c";
+}
+.tps-taxi:before {
+  content: "\e91d";
+}
+.tps-tennis:before {
+  content: "\e91e";
+}
+.tps-toilet-paper:before {
+  content: "\e91f";
+}
+.tps-wifi:before {
+  content: "\e920";
+}
+

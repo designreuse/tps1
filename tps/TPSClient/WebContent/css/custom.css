@@ -1,0 +1,180 @@
+/*added*/
+
+.clear-fix{
+    clear: both;
+}
+
+#map {
+    width: 100%;
+    height: 400px;
+}
+
+.loading-img{
+    position: fixed;
+    display: none;
+    background: RGBA(51, 51, 51, 0.76);
+    color: #fff;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 99999;
+}
+
+
+.spinner-holder {
+    position: relative;
+    top: 50%;
+}
+
+.updated-info{
+    color: red;
+}
+
+img.updated-info{
+    border:5px solid red;
+}
+
+#paymentIcon-upload{
+    display:none
+}
+
+
+
+/*New css design*/
+#wrapper{
+    background: #2c0b29 !important;
+}
+.nav-header{
+    background: #2c0b29;
+}
+.btn-primary,
+.minimalize-styl-2{
+    background-color: #681934;
+    border-color: #681934;
+}
+.btn-primary:hover, 
+.btn-primary:focus, 
+.btn-primary:active, 
+.btn-primary.active, 
+.open .dropdown-toggle.btn-primary, 
+.btn-primary:active:focus, 
+.btn-primary:active:hover, 
+.btn-primary.active:hover, 
+.btn-primary.active:focus {
+    background-color: #8b294b;
+    border-color: #8b294b;
+    color: #FFFFFF;
+}
+.nav > li.active {
+    border-left: 4px solid #ced1d0;
+    background: #451525;
+}
+.navbar-default .nav > li > a:hover, .navbar-default .nav > li > a:focus {
+    background-color: #5f2237;
+    color: white;
+}
+#DataTables_Table_0 > thead > tr, .sorting_asc {
+    background: #5f2237 !important;
+    color: #fff;
+}
+table.dataTable thead .sorting::after,
+table.dataTable thead .sorting_asc::after,
+table.dataTable thead .sorting_desc::after,
+table.dataTable thead .sorting_asc_disabled::after,
+table.dataTable thead .sorting_desc_disabled::after {
+    opacity: 0.8;
+}
+.btn-info {
+    background-color: #5f2237;
+    border-color: #5f2237;
+    color: #FFFFFF;
+}
+.btn-info:hover, .btn-info:focus, .btn-info:active, .btn-info.active, .open .dropdown-toggle.btn-info, .btn-info:active:focus, .btn-info:active:hover, .btn-info.active:hover, .btn-info.active:focus {
+    background-color: #902a4d;
+    border-color: #902a4d;
+    color: #FFFFFF;
+}
+#DataTables_Table_0_filter > label > input,
+#nodeName1{
+    border-radius: 6px;
+}
+a.btn.btn-default {
+    margin-bottom: 10px;
+}
+a.btn.btn-default:hover{
+    background-color: #8b294b;
+    border-color: #8b294b;
+    color: #FFFFFF;
+}
+.btn-danger {
+    background-color: #ca3d57;
+    border-color: #d22134;
+    color: #FFFFFF;
+}
+.adding{
+    color: inherit;
+    background: white;
+    border: 1px solid #e7eaec;
+    margin-bottom: 10px;
+}
+.table > thead > tr > th {
+    border-bottom: 1px solid #fff;
+    background-color: #5f2237;
+    color: #fff;
+}
+#hotelDetail_wrapper{
+    padding-top:20px;
+}
+#hotelDetail > thead > tr{
+    background-color: #5f2237;
+}
+.preview-hotel{
+    background: #681934;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    margin-top: 7px;
+    width: 123px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+td.center{
+    text-align: center;
+}
+.sk-spinner-wave div{
+    background-color: #681934;
+}
+body.mini-navbar .nav-header {
+    padding: 0;
+    background-color: #ced1d0;
+}
+.pace .pace-progress{
+    background: #681934;
+}
+body{
+    background:url("images/picture.jpg")no-repeat;
+    background-position: 100%;
+}
+.loginscreen.middle-box {
+    width: 300px;
+    top: 20%;
+    position: absolute;
+    left: 50%;
+    margin-left: -150px;
+}
+.logo-name{
+    background:url("images/logo.png")no-repeat;
+}
+.loginscreen h3{
+    padding: 10px 0;
+    color: #fff;;
+}
+.login{
+    overflow: hidden;
+}
+.form-control:focus, .single-line:focus {
+    border-color: #681934 !important;
+}
+.add-btn{
+    margin-bottom: 15px;
+}
